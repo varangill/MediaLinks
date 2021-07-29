@@ -29,16 +29,16 @@ const db = mongoose.connection
 db.once('open', () => {
     console.log('DB connected');
 
-    const msgCollection = db.collection("medialinks");
-    const changeStream = msgCollection.watch();
+    const linkCollection = db.collection("medialinks");
+    const changeStream = linkCollection.watch();
     changeStream.on('change', (change) => {
         if (change.operationType === 'insert') {
-            const messageDetails = change.fullDocument;
+            const linkDetails = change.fullDocument;
             pusher.trigger('links', 'inserted', {
-                name: messageDetails.name,
-                message: messageDetails.message,
-                timestamp: messageDetails.timestamp,
-                received: messageDetails.received
+                name: linkDetails.name,
+                instagram: linkDetails.instagram,
+                facebook: linkDetails.facebook,
+                twitter: linkDetails.twitter
             });
         } else {
             console.log('Error triggering Pusher');
@@ -48,7 +48,7 @@ db.once('open', () => {
 
 app.get("/", (req,res)=>res.status(200).send("hello world"))
 
-app.get("/messages/sync", (req, res) => {
+app.get("/links/sync", (req, res) => {
     Media.find((err, data) => {
         if (err) {
             res.status(500).send(err)
@@ -58,7 +58,7 @@ app.get("/messages/sync", (req, res) => {
     })
 })
 
-app.post("/messages/new", (req, res) => {
+app.post("/links/new", (req, res) => {
     const dbMedia = req.body
 
     Nedia.create(dbMedia, (err, data) => {
